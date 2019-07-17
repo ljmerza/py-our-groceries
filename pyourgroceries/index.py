@@ -88,7 +88,7 @@ class OurGroceries():
         cookies = {COOKIE_KEY_SESSION: self._session_key}
         payload = {ATTR_COMMAND: command, ATTR_TEAM_ID: self._team_id}
         if other_payload:
-            payload = {**payload, **other_payload} 
+            payload = {**payload, **other_payload}
 
         async with aiohttp.ClientSession(cookies=cookies) as session:
             async with session.post(YOUR_LISTS, json=payload) as resp:
