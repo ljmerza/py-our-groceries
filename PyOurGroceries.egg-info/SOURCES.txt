@@ -1,0 +1,11 @@
+README.md
+setup.py
+test
+PyOurGroceries.egg-info/PKG-INFO
+PyOurGroceries.egg-info/SOURCES.txt
+PyOurGroceries.egg-info/dependency_links.txt
+PyOurGroceries.egg-info/top_level.txt
+pyourgroceries.egg-info/PKG-INFO
+pyourgroceries.egg-info/SOURCES.txt
+pyourgroceries.egg-info/dependency_links.txt
+pyourgroceries.egg-info/top_level.txt
