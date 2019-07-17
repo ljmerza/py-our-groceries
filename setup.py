@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='pyourgroceries',  
     version='0.1',
-    scripts=['test'] ,
+    scripts=['index.py'] ,
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     description="Our Groceries Unofficial Python Pacakge",
