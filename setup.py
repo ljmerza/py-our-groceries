@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='pyourgroceries',  
-    version='0.1',
+    name='py-our-groceries',  
+    version='0.13',
     scripts=['index.py'] ,
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",

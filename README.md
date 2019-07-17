@@ -13,15 +13,19 @@ python -m pip install --user --upgrade twine
 
 build
 ```bash
-python setup.py bdist_wheel
+python setup.py sdist
 ```
 
 install
 ```bash
-python -m pip install dist/pyourgroceries-0.1-py3-none-any.whl
+python setup.py install
 ```
 
 upload
 ```bash
 python -m twine upload dist/*
 ```
+
+install from pip
+```
+pip install py-our-groceries
