@@ -1,19 +1,17 @@
-import setuptools
+from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-setuptools.setup(
+setup(
     name='py-our-groceries',  
-    version='0.13',
-    scripts=['index.py'] ,
+    version='0.16',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
+    keywords='unoffical our groceries api',
     description="Our Groceries Unofficial Python Pacakge",
-    long_description=long_description,
+    long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
     url="https://github.com/ljmerza/py-our-groceries",
-    packages=setuptools.find_packages(),
+    license='MIT',
+    packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
