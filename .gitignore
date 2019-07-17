@@ -1,3 +1,6 @@
-build/
-dist/
-py_our_groceries.egg-info/
+/build/
+/dist/
+/py_our_groceries.egg-info/
+
+*.pyc
+__pycache__/
