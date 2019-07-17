@@ -3,6 +3,11 @@ from setuptools import setup, find_packages
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
+REQUIRES = [
+    'aiohttp==3.5.4',
+    'lxml==4.3.4',
+    'beautifulsoup4==4.7.1'
+]
 
 setup(
     name='py-our-groceries',  
@@ -19,6 +24,7 @@ setup(
     include_package_data=True,
     python_requires='>=3',
     zip_safe=False,
+    install_requires=REQUIRES,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
