@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 
-
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
@@ -11,7 +10,7 @@ REQUIRES = [
 
 setup(
     name='ourgroceries',
-    version='1.0.0',
+    version='1.0.2',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     keywords='unoffical our groceries api',

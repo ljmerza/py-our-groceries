@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import re
 
 import aiohttp
@@ -79,7 +81,7 @@ class OurGroceries():
         """Get an our grocery list's items."""
         other_payload = {ATTR_LIST_ID: list_id}
         return await self._post(ACTION_GET_LIST, other_payload)
-        
+
     async def _post(self, command, other_payload=None):
         """Post a command to the API."""
         if not self._session_key or not self._team_id:

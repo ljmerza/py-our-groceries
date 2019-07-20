@@ -9,7 +9,7 @@ pip install ourgroceries
 ## Usage
 
 ```
-import OurGroceries from ourgroceries
+from ourgroceries import OurGroceries
 
 username = ''
 password = ''
