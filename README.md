@@ -24,9 +24,9 @@ my_todo_list = og.get_list_items(list_id='')
 
 prerequisites
 ```
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install tqdm
-python -m pip install --user --upgrade twine
+pip install --upgrade pip setuptools wheel
+pip install tqdm
+pip install --user --upgrade twine
 ```
 
 build
@@ -41,5 +41,5 @@ python setup.py install
 
 upload
 ```bash
-python -m twine upload dist/*
+twine upload dist/*
 ```
