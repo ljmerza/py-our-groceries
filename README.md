@@ -26,7 +26,7 @@ prerequisites
 ```
 pip install --upgrade pip setuptools wheel
 pip install tqdm
-pip install --user --upgrade twine
+pip install -upgrade twine
 ```
 
 build
