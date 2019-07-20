@@ -93,12 +93,3 @@ class OurGroceries():
         async with aiohttp.ClientSession(cookies=cookies) as session:
             async with session.post(YOUR_LISTS, json=payload) as resp:
                 return await resp.json()
-
-
-
-# import asyncio
-# username = ''
-# password = ''
-# og = OurGroceries(username, password)
-# loop = asyncio.get_event_loop()
-# loop.run_until_complete(og.get_my_lists())
