@@ -30,13 +30,32 @@ FORM_VALUE_ACTION = 'sign-me-in'
 ACTION_GET_LIST = 'getList'
 ACTION_GET_LISTS = 'getOverview'
 
+ACTION_ITEM_CROSSED_OFF = 'setItemCrossedOff'
+ACTION_ITEM_ADD = 'insertItem'
+ACTION_ITEM_REMOVE = 'deleteItem'
+ACTION_ITEM_RENAME = 'changeItemValue'
+
+ACTION_LIST_CREATE = 'createList'
+ACTION_LIST_REMOVE = 'deleteList'
+ACTION_LIST_RENAME = 'renameList'
+
+
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
 
 # post body attributes
 ATTR_LIST_ID = 'listId'
+ATTR_LIST_NAME = 'name'
+ATTR_LIST_TYPE = 'listType'
+
+ATTR_ITEM_ID = 'itemId'
+ATTR_ITEM_CROSSED = 'crossedOff'
+ATTR_ITEM_VALUE = 'value'
+
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
+
+
 
 
 class OurGroceries():
@@ -93,13 +112,54 @@ class OurGroceries():
         other_payload = {ATTR_LIST_ID: list_id}
         return await self._post(ACTION_GET_LIST, other_payload)
 
+    async def create_list(self, name):
+        """Create a new shopping list."""
+        _LOGGER.debug('ourgroceries create_list')
+        other_payload = {
+            ATTR_LIST_NAME: name,
+            ATTR_LIST_TYPE: 'SHOPPING',
+        }
+        return await self._post(ACTION_LIST_CREATE, other_payload)
+
+    async def toggle_item_crossed_off(self, list_id, item_id, cross_off=False):
+        """Toggles a lists's item's crossed off property."""
+        _LOGGER.debug('ourgroceries toggle_item_crossed_off')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+            ATTR_ITEM_ID: item_id,
+            ATTR_ITEM_CROSSED: cross_off,
+        }
+        return await self._post(ACTION_ITEM_CROSSED_OFF, other_payload)
+
+    async def add_item_to_list(self, list_id, value):
+        """Add a new item to a list."""
+        _LOGGER.debug('ourgroceries add_item_to_list')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+            ATTR_ITEM_VALUE: value,
+        }
+        return await self._post(ACTION_ITEM_ADD, other_payload)
+
+    async def remove_item_from_list(self, list_id, item_id):
+        """Remove an item from a list."""
+        _LOGGER.debug('ourgroceries remove_item_from_list')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+            ATTR_ITEM_ID: item_id,
+        }
+        return await self._post(ACTION_ITEM_REMOVE, other_payload)
+
     async def _post(self, command, other_payload=None):
         """Post a command to the API."""
         if not self._session_key:
             await self.login()
 
         cookies = {COOKIE_KEY_SESSION: self._session_key}
-        payload = {ATTR_COMMAND: command, ATTR_TEAM_ID: self._team_id}
+        payload = {ATTR_COMMAND: command}
+
+        if self._team_id:
+            payload[ATTR_TEAM_ID] = self._team_id}
+
         if other_payload:
             payload = {**payload, **other_payload}
 
