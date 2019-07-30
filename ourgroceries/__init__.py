@@ -4,8 +4,11 @@ import re
 
 import aiohttp
 from bs4 import BeautifulSoup
+import logging
 from lxml import html
 
+
+_LOGGER = logging.getLogger(__name__)
 
 # urls used
 BASE_URL = 'https://www.ourgroceries.com'
@@ -46,9 +49,11 @@ class OurGroceries():
         """Logs into Our Groceries."""
         await self._get_session_cookie()
         await self._get_team_id()
+        _LOGGER.debug('ourgroceries logged in')
 
     async def _get_session_cookie(self):
         """Gets the session cookie value."""
+        _LOGGER.debug('ourgroceries _get_session_cookie')
         form_data = aiohttp.FormData()
         form_data.add_field(FORM_KEY_USERNAME, self._username)
         form_data.add_field(FORM_KEY_PASSWORD, self._password)
@@ -60,10 +65,12 @@ class OurGroceries():
                     if key == COOKIE_KEY_SESSION:
                         self._session_key = cookie.value
                 if not self._session_key:
+                    _LOGGER.error('ourgroceries Could not find cookie session')
                     raise Exception('Could not find cookie session')
 
     async def _get_team_id(self):
         """Gets the team id for a user."""
+        _LOGGER.debug('ourgroceries _get_team_id')
         cookies = {COOKIE_KEY_SESSION: self._session_key}
         async with aiohttp.ClientSession(cookies=cookies) as session:
             async with session.get(YOUR_LISTS) as resp:
@@ -71,14 +78,17 @@ class OurGroceries():
                 for team_id in re.findall(REGEX_TEAM_ID, responseText):
                     self._team_id = team_id
                 if not self._team_id:
+                    _LOGGER.error('ourgroceries Could not find team id')
                     raise Exception('Could not find team id')
 
     async def get_my_lists(self):
         """Get our grocery lists."""
+        _LOGGER.debug('ourgroceries get_my_lists')
         return await self._post(ACTION_GET_LISTS)
 
     async def get_list_items(self, list_id):
         """Get an our grocery list's items."""
+        _LOGGER.debug('ourgroceries get_list_items')
         other_payload = {ATTR_LIST_ID: list_id}
         return await self._post(ACTION_GET_LIST, other_payload)
 
