@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 import logging
 from lxml import html
 
+from .exceptions import InvalidLoginException
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +69,7 @@ class OurGroceries():
                         _LOGGER.error('ourgroceries found _session_key {}'.format(self._session_key))
                 if not self._session_key:
                     _LOGGER.error('ourgroceries Could not find cookie session')
-                    raise Exception('Could not find cookie session')
+                    raise InvalidLoginException('Could not find session cookie')
 
     async def _get_team_id(self):
         """Gets the team id for a user."""
