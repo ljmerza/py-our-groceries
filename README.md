@@ -44,9 +44,9 @@ Gets the items for a list
 
 ---
 
-```def create_list(name, listType='SHOPPING')```
+```def create_list(name, list_type='SHOPPING')```
 
-Creates a new list. listType can be 'RECIPES' or 'SHOPPING'
+Creates a new list. list_type can be 'RECIPES' or 'SHOPPING'
 
 ---
 

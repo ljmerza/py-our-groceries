@@ -112,7 +112,7 @@ class OurGroceries():
         other_payload = {ATTR_LIST_ID: list_id}
         return await self._post(ACTION_GET_LIST, other_payload)
 
-    async def create_list(self, name, listType='SHOPPING'):
+    async def create_list(self, name, list_type='SHOPPING'):
         """Create a new shopping list."""
         _LOGGER.debug('ourgroceries create_list')
         other_payload = {
