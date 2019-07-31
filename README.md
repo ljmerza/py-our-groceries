@@ -25,6 +25,54 @@ my_todo_list = asyncio.run(og.get_list_items(list_id=''))
 print(my_todo_list)
 ```
 
+## Methods
+```def login()```
+
+Logs into our groceries
+
+---
+
+```def get_my_lists()```
+
+Gets all of your lists
+
+---
+
+```def get_list_items(list_id)```
+
+Gets the items for a list
+
+---
+
+```def create_list(name, listType='SHOPPING')```
+
+Creates a new list. listType can be 'RECIPES' or 'SHOPPING'
+
+---
+
+```def toggle_item_crossed_off(list_id, item_id, cross_off=False)```
+
+Toggle a list item's crossed off property based on `cross_off`
+
+---
+
+```def add_item_to_list(list_id, value)```
+
+Adds a new item to a given list
+
+---
+
+```def remove_item_from_list(list_id, item_id)```
+
+Removes an item from a given list
+
+---
+
+
+## Exceptions
+
+throws `InvalidLoginException` if can't login.
+
 
 ## Development
 
@@ -32,7 +80,7 @@ prerequisites
 ```
 pip install --upgrade pip setuptools wheel
 pip install tqdm
-pip install -upgrade twine
+pip install --upgrade twine
 ```
 
 build

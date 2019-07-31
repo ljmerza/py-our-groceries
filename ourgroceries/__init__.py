@@ -112,12 +112,12 @@ class OurGroceries():
         other_payload = {ATTR_LIST_ID: list_id}
         return await self._post(ACTION_GET_LIST, other_payload)
 
-    async def create_list(self, name):
+    async def create_list(self, name, listType='SHOPPING'):
         """Create a new shopping list."""
         _LOGGER.debug('ourgroceries create_list')
         other_payload = {
             ATTR_LIST_NAME: name,
-            ATTR_LIST_TYPE: 'SHOPPING',
+            ATTR_LIST_TYPE: listType.upper(),
         }
         return await self._post(ACTION_LIST_CREATE, other_payload)
 
@@ -158,7 +158,7 @@ class OurGroceries():
         payload = {ATTR_COMMAND: command}
 
         if self._team_id:
-            payload[ATTR_TEAM_ID] = self._team_id}
+            payload[ATTR_TEAM_ID] = self._team_id
 
         if other_payload:
             payload = {**payload, **other_payload}
