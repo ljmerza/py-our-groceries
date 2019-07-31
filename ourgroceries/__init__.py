@@ -117,7 +117,7 @@ class OurGroceries():
         _LOGGER.debug('ourgroceries create_list')
         other_payload = {
             ATTR_LIST_NAME: name,
-            ATTR_LIST_TYPE: listType.upper(),
+            ATTR_LIST_TYPE: list_type.upper(),
         }
         return await self._post(ACTION_LIST_CREATE, other_payload)
 
