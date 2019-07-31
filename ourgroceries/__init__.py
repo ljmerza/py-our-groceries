@@ -85,7 +85,7 @@ class OurGroceries():
                 for key, cookie in cookies.items():
                     if key == COOKIE_KEY_SESSION:
                         self._session_key = cookie.value
-                        _LOGGER.error('ourgroceries found _session_key {}'.format(self._session_key))
+                        _LOGGER.debug('ourgroceries found _session_key {}'.format(self._session_key))
                 if not self._session_key:
                     _LOGGER.error('ourgroceries Could not find cookie session')
                     raise InvalidLoginException('Could not find session cookie')
@@ -99,7 +99,7 @@ class OurGroceries():
                 responseText = await resp.text()
                 for team_id in re.findall(REGEX_TEAM_ID, responseText):
                     self._team_id = team_id
-                    _LOGGER.error('ourgroceries found team_id {}'.format(self._team_id))
+                    _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
 
     async def get_my_lists(self):
         """Get our grocery lists."""
