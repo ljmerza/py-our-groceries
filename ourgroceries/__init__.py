@@ -56,6 +56,15 @@ ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
 
 
+# properties of returned data
+PROP_LIST = 'list'
+PROP_ITEMS = 'items'
+
+
+def add_crossed_off_prop(item):
+    """Adds crossed off prop to any items that don't have it."""
+    if not hasattr(item, ATTR_ITEM_CROSSED):
+        item[ATTR_ITEM_CROSSED] = False
 
 
 class OurGroceries():
@@ -110,7 +119,11 @@ class OurGroceries():
         """Get an our grocery list's items."""
         _LOGGER.debug('ourgroceries get_list_items')
         other_payload = {ATTR_LIST_ID: list_id}
-        return await self._post(ACTION_GET_LIST, other_payload)
+        data = await self._post(ACTION_GET_LIST, other_payload)
+
+        # items that aren't crossed off dont have this prop so add it for consistency
+        data[PROP_LIST][PROP_ITEMS] = map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS]))
+        return data
 
     async def create_list(self, name, list_type='SHOPPING'):
         """Create a new shopping list."""
