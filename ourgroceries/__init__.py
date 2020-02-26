@@ -122,7 +122,7 @@ class OurGroceries():
         data = await self._post(ACTION_GET_LIST, other_payload)
 
         # items that aren't crossed off dont have this prop so add it for consistency
-        data[PROP_LIST][PROP_ITEMS] = map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS]))
+        data[PROP_LIST][PROP_ITEMS] = map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS])
         return data
 
     async def create_list(self, name, list_type='SHOPPING'):
