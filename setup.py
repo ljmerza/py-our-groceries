@@ -4,13 +4,12 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
     'aiohttp==3.6.1',
-    'lxml==4.4.0',
     'beautifulsoup4==4.7.1'
 ]
 
 setup(
     name='ourgroceries',
-    version='1.3.2',
+    version='1.3.4',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     keywords='unoffical our groceries api',

@@ -16,12 +16,14 @@ username = ''
 password = ''
 
 og = OurGroceries(username, password)
-asyncio.run(og.login())
 
-my_lists = asyncio.run(og.get_my_lists())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(og.login())
+
+my_lists = loop.run_until_complete(og.get_my_lists())
 print(my_lists)
 
-my_todo_list = asyncio.run(og.get_list_items(list_id=''))
+my_todo_list = loop.run_until_complete(og.get_list_items(list_id=''))
 print(my_todo_list)
 ```
 
@@ -79,7 +81,8 @@ throws `InvalidLoginException` if can't login.
 prerequisites
 ```
 python3 -m pip install --user --upgrade setuptools wheel
-python3 setup.py sdist bdist_wheel
 python3 -m pip install --user --upgrade twine
+
+python3 setup.py sdist bdist_wheel
 python3 -m twine upload  dist/*
 ```

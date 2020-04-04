@@ -5,7 +5,6 @@ import re
 import aiohttp
 from bs4 import BeautifulSoup
 import logging
-from lxml import html
 
 from .exceptions import InvalidLoginException
 
