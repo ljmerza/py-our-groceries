@@ -5,6 +5,7 @@ import re
 import aiohttp
 from bs4 import BeautifulSoup
 import logging
+from lxml import html
 
 from .exceptions import InvalidLoginException
 
@@ -41,6 +42,7 @@ ACTION_LIST_RENAME = 'renameList'
 
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
+REGEX_CATEGORY_ID = r'g_categoryListId = "(.*)";'
 
 # post body attributes
 ATTR_LIST_ID = 'listId'
@@ -50,7 +52,7 @@ ATTR_LIST_TYPE = 'listType'
 ATTR_ITEM_ID = 'itemId'
 ATTR_ITEM_CROSSED = 'crossedOff'
 ATTR_ITEM_VALUE = 'value'
-
+ATTR_ITEM_CATEGORY = 'categoryId'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
 
@@ -105,23 +107,27 @@ class OurGroceries():
         async with aiohttp.ClientSession(cookies=cookies) as session:
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
-                for team_id in re.findall(REGEX_TEAM_ID, responseText):
-                    self._team_id = team_id
-                    _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
+                self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
+                self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
+
 
     async def get_my_lists(self):
         """Get our grocery lists."""
         _LOGGER.debug('ourgroceries get_my_lists')
         return await self._post(ACTION_GET_LISTS)
 
+    async def get_category_items(self):
+        """Get an our grocery list's items."""
+        _LOGGER.debug('ourgroceries get_list_items')
+        other_payload = {ATTR_LIST_ID: self._category_id}
+        data = await self._post(ACTION_GET_LIST, other_payload)
+        return(data)
+
     async def get_list_items(self, list_id):
         """Get an our grocery list's items."""
         _LOGGER.debug('ourgroceries get_list_items')
         other_payload = {ATTR_LIST_ID: list_id}
         data = await self._post(ACTION_GET_LIST, other_payload)
-
-        # items that aren't crossed off dont have this prop so add it for consistency
-        data[PROP_LIST][PROP_ITEMS] = map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS])
         return data
 
     async def create_list(self, name, list_type='SHOPPING'):
@@ -133,6 +139,16 @@ class OurGroceries():
         }
         return await self._post(ACTION_LIST_CREATE, other_payload)
 
+    async def create_category(self, name):
+        """Create a new shopping list."""
+        _LOGGER.debug('ourgroceries create_list')
+        other_payload = {
+            ATTR_ITEM_VALUE: name,
+            ATTR_LIST_ID: self._category_id,
+        }
+        print(other_payload)
+        return await self._post(ACTION_ITEM_ADD, other_payload)
+
     async def toggle_item_crossed_off(self, list_id, item_id, cross_off=False):
         """Toggles a lists's item's crossed off property."""
         _LOGGER.debug('ourgroceries toggle_item_crossed_off')
@@ -143,12 +159,13 @@ class OurGroceries():
         }
         return await self._post(ACTION_ITEM_CROSSED_OFF, other_payload)
 
-    async def add_item_to_list(self, list_id, value):
+    async def add_item_to_list(self, list_id, value, category="uncategorized"):
         """Add a new item to a list."""
         _LOGGER.debug('ourgroceries add_item_to_list')
         other_payload = {
             ATTR_LIST_ID: list_id,
             ATTR_ITEM_VALUE: value,
+            ATTR_ITEM_CATEGORY: category,
         }
         return await self._post(ACTION_ITEM_ADD, other_payload)
 
