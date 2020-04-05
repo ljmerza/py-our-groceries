@@ -115,7 +115,7 @@ class OurGroceries():
         return await self._post(ACTION_GET_LISTS)
 
     async def get_category_items(self):
-        """Get an our grocery list's items."""
+        """Get category items."""
         _LOGGER.debug('ourgroceries get_list_items')
         other_payload = {ATTR_LIST_ID: self._category_id}
         data = await self._post(ACTION_GET_LIST, other_payload)
@@ -138,7 +138,7 @@ class OurGroceries():
         return await self._post(ACTION_LIST_CREATE, other_payload)
 
     async def create_category(self, name):
-        """Create a new shopping list."""
+        """Create a new category."""
         _LOGGER.debug('ourgroceries create_list')
         other_payload = {
             ATTR_ITEM_VALUE: name,
