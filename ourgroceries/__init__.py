@@ -106,7 +106,9 @@ class OurGroceries():
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
+                _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id)
                 self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
+                _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id)
 
 
     async def get_my_lists(self):
@@ -116,7 +118,7 @@ class OurGroceries():
 
     async def get_category_items(self):
         """Get category items."""
-        _LOGGER.debug('ourgroceries get_list_items')
+        _LOGGER.debug('ourgroceries get_category_items')
         other_payload = {ATTR_LIST_ID: self._category_id}
         data = await self._post(ACTION_GET_LIST, other_payload)
         return(data)
@@ -139,12 +141,11 @@ class OurGroceries():
 
     async def create_category(self, name):
         """Create a new category."""
-        _LOGGER.debug('ourgroceries create_list')
+        _LOGGER.debug('ourgroceries create_category')
         other_payload = {
             ATTR_ITEM_VALUE: name,
             ATTR_LIST_ID: self._category_id,
         }
-        print(other_payload)
         return await self._post(ACTION_ITEM_ADD, other_payload)
 
     async def toggle_item_crossed_off(self, list_id, item_id, cross_off=False):
