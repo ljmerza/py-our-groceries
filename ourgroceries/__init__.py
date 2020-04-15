@@ -64,6 +64,7 @@ def add_crossed_off_prop(item):
     """Adds crossed off prop to any items that don't have it."""
     if not hasattr(item, ATTR_ITEM_CROSSED):
         item[ATTR_ITEM_CROSSED] = False
+    return item
 
 
 class OurGroceries():
@@ -106,9 +107,9 @@ class OurGroceries():
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
-                _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id)
+                _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
                 self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
-                _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id)
+                _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
 
 
     async def get_my_lists(self):
@@ -128,6 +129,7 @@ class OurGroceries():
         _LOGGER.debug('ourgroceries get_list_items')
         other_payload = {ATTR_LIST_ID: list_id}
         data = await self._post(ACTION_GET_LIST, other_payload)
+        data[PROP_LIST][PROP_ITEMS] = list(map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS]))
         return data
 
     async def create_list(self, name, list_type='SHOPPING'):
