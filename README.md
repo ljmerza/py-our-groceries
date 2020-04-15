@@ -40,6 +40,12 @@ Gets all of your lists
 
 ---
 
+```def get_category_items()```
+
+Gets all of your category items
+
+---
+
 ```def get_list_items(list_id)```
 
 Gets the items for a list
@@ -52,15 +58,21 @@ Creates a new list. list_type can be 'RECIPES' or 'SHOPPING'
 
 ---
 
+```def create_category(name)```
+
+Create a new category
+
+---
+
 ```def toggle_item_crossed_off(list_id, item_id, cross_off=False)```
 
 Toggle a list item's crossed off property based on `cross_off`
 
 ---
 
-```def add_item_to_list(list_id, value)```
+```def add_item_to_list(list_id, value, category="uncategorized")```
 
-Adds a new item to a given list
+Adds a new item to a given list/category
 
 ---
 
