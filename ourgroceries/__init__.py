@@ -22,7 +22,7 @@ COOKIE_KEY_SESSION = 'ourgroceries-auth'
 FORM_KEY_USERNAME = 'emailAddress'
 FORM_KEY_PASSWORD = 'password'
 FORM_KEY_ACTION = 'action'
-FORM_VALUE_ACTION = 'sign-me-in'
+FORM_VALUE_ACTION = 'sign-in'
 
 # actions to preform on post api
 ACTION_GET_LIST = 'getList'
@@ -110,7 +110,6 @@ class OurGroceries():
                 _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
                 self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
                 _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
-
 
     async def get_my_lists(self):
         """Get our grocery lists."""
