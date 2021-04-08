@@ -188,6 +188,57 @@ class OurGroceries():
         }
         return await self._post(ACTION_ITEM_REMOVE, other_payload)
 
+    async def get_master_list(self):
+        """Get an our grocery list's items."""
+        _LOGGER.debug('ourgroceries get_list_items')
+        other_payload = {ATTR_LIST_ID: self._master_list_id}
+        return await self._post(ACTION_GET_LIST, other_payload)
+
+    async def get_category_list(self):
+        """Get our grocery lists."""
+        _LOGGER.debug('ourgroceries get_master_list')
+        other_payload = {ATTR_TEAM_ID: self._team_id}
+        return await self._post(ACTION_GET_CATEGORY_LIST, other_payload)
+
+    async def delete_list(self, list_id):
+        """Create a new shopping list."""
+        _LOGGER.debug('ourgroceries create_list')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+            ATTR_TEAM_ID: self._team_id,
+        }
+        return await self._post(ACTION_LIST_REMOVE, other_payload)
+
+    async def delete_all_crossed_off_from_list(self, list_id):
+        """delete all crossed off itemsn from a list."""
+        _LOGGER.debug('ourgroceries remove_item_from_list')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+        }
+        return await self._post(ACTION_LIST_DELETE_ALL_CROSSED_OFF, other_payload)
+
+    async def add_item_to_master_list(self, value, category_id):
+        """Add a new item to a list."""
+        _LOGGER.debug('ourgroceries add_item_to_list')
+        other_payload = {
+            ATTR_LIST_ID: self._master_list_id,
+            ATTR_ITEM_VALUE: value,
+            ATTR_CATEGORY_ID: category_id,
+        }
+        return await self._post(ACTION_ITEM_ADD, other_payload)
+
+    async def change_item_on_list(self, list_id, item_id, category_id, value):
+        """Add a new item to a list."""
+        _LOGGER.debug('ourgroceries add_item_to_list')
+        other_payload = {
+            ATTR_ITEM_ID: item_id,
+            ATTR_LIST_ID: list_id,
+            ATTR_ITEM_NEW_VALUE: value,
+            ATTR_CATEGORY_ID: category_id,
+            ATTR_TEAM_ID: self._team_id,
+        }
+        return await self._post(ACTION_ITEM_CHANGE_VALUE, other_payload)
+
     async def _post(self, command, other_payload=None):
         """Post a command to the API."""
         if not self._session_key:
