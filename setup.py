@@ -9,7 +9,7 @@ REQUIRES = [
 
 setup(
     name='ourgroceries',
-    version='1.3.5',
+    version='1.3.6',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     keywords='unoffical our groceries api',
@@ -28,4 +28,4 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
- )
+)

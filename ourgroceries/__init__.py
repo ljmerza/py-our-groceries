@@ -37,6 +37,16 @@ ACTION_LIST_CREATE = 'createList'
 ACTION_LIST_REMOVE = 'deleteList'
 ACTION_LIST_RENAME = 'renameList'
 
+ACTION_GET_MASTER_LIST = 'getMasterList'
+ACTION_GET_CATEGORY_LIST = 'getCategoryList'
+ACTION_ITEM_RENAME = 'changeItemValue'
+
+ACTION_ITEM_CHANGE_VALUE = 'changeItemValue'
+ACTION_LIST_DELETE_ALL_CROSSED_OFF = 'deleteAllCrossedOffItems'
+REGEX_MASTER_LIST_ID = r'href="list/(.*)">Manage master list'
+ATTR_CATEGORY_ID = 'categoryId'
+ATTR_ITEM_NEW_VALUE = 'newValue'
+
 
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
@@ -54,7 +64,6 @@ ATTR_ITEM_CATEGORY = 'categoryId'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
 
-
 # properties of returned data
 PROP_LIST = 'list'
 PROP_ITEMS = 'items'
@@ -62,14 +71,15 @@ PROP_ITEMS = 'items'
 
 def add_crossed_off_prop(item):
     """Adds crossed off prop to any items that don't have it."""
-    if not hasattr(item, ATTR_ITEM_CROSSED):
-        item[ATTR_ITEM_CROSSED] = False
+    item[ATTR_ITEM_CROSSED] = item.get(ATTR_ITEM_CROSSED, False)
     return item
 
 
 class OurGroceries():
     def __init__(self, username, password):
         """Set Our Groceries username and password."""
+        self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
+
         self._username = username
         self._password = password
         self._session_key = None
@@ -110,7 +120,6 @@ class OurGroceries():
                 _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
                 self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
                 _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
-
 
     async def get_my_lists(self):
         """Get our grocery lists."""
