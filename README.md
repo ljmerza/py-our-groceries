@@ -96,7 +96,8 @@ python3 -m pip install --user --upgrade setuptools wheel
 python3 -m pip install --user --upgrade twine
 
 increment version in `setup.py`
+delete build folder
 
 python3 setup.py sdist bdist_wheel
-python3 -m twine upload  dist/*
+twine upload --repository ourgroceries dist/*
 ```

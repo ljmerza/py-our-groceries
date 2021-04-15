@@ -62,8 +62,7 @@ PROP_ITEMS = 'items'
 
 def add_crossed_off_prop(item):
     """Adds crossed off prop to any items that don't have it."""
-    if not hasattr(item, ATTR_ITEM_CROSSED):
-        item[ATTR_ITEM_CROSSED] = False
+    item[ATTR_ITEM_CROSSED] = item.get(ATTR_ITEM_CROSSED, False)
     return item
 
 
