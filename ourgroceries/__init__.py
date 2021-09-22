@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import re
-
+import json
 import aiohttp
 import logging
 
@@ -40,7 +40,7 @@ ACTION_LIST_RENAME = 'renameList'
 
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
-REGEX_CATEGORY_ID = r'g_categoryListId = "(.*)";'
+REGEX_STATIC_METALIST = r'g_staticMetalist = (\[.*\]);'
 
 # post body attributes
 ATTR_LIST_ID = 'listId'
@@ -107,7 +107,9 @@ class OurGroceries():
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
                 _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
-                self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
+                static_metalist = json.loads(re.findall(REGEX_STATIC_METALIST, responseText)[0])
+                categoryList = [list for list in static_metalist if list['listType'] == 'CATEGORY'][0]
+                self._category_id = categoryList['id']
                 _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
 
     async def get_my_lists(self):
