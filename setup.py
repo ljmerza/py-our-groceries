@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.6.1',
-    'beautifulsoup4==4.7.1'
+    'aiohttp==3.8.1',
+    'beautifulsoup4==4.10.0'
 ]
 
 setup(
     name='ourgroceries',
-    version='1.3.6',
+    version='1.4.0',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     keywords='unoffical our groceries api',

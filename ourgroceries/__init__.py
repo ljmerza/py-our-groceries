@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import re
-
+import json
 import aiohttp
 import logging
 
@@ -22,7 +22,7 @@ COOKIE_KEY_SESSION = 'ourgroceries-auth'
 FORM_KEY_USERNAME = 'emailAddress'
 FORM_KEY_PASSWORD = 'password'
 FORM_KEY_ACTION = 'action'
-FORM_VALUE_ACTION = 'sign-me-in'
+FORM_VALUE_ACTION = 'sign-in'
 
 # actions to preform on post api
 ACTION_GET_LIST = 'getList'
@@ -50,7 +50,7 @@ ATTR_ITEM_NEW_VALUE = 'newValue'
 
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
-REGEX_CATEGORY_ID = r'g_categoryListId = "(.*)";'
+REGEX_STATIC_METALIST = r'g_staticMetalist = (\[.*\]);'
 
 # post body attributes
 ATTR_LIST_ID = 'listId'
@@ -118,7 +118,9 @@ class OurGroceries():
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
                 _LOGGER.debug('ourgroceries found team_id {}'.format(self._team_id))
-                self._category_id = re.findall(REGEX_CATEGORY_ID, responseText)[0]
+                static_metalist = json.loads(re.findall(REGEX_STATIC_METALIST, responseText)[0])
+                categoryList = [list for list in static_metalist if list['listType'] == 'CATEGORY'][0]
+                self._category_id = categoryList['id']
                 _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
 
     async def get_my_lists(self):
@@ -169,7 +171,7 @@ class OurGroceries():
         }
         return await self._post(ACTION_ITEM_CROSSED_OFF, other_payload)
 
-    async def add_item_to_list(self, list_id, value, category="uncategorized"):
+    async def add_item_to_list(self, list_id, value, category="uncategorized", auto_category=False):
         """Add a new item to a list."""
         _LOGGER.debug('ourgroceries add_item_to_list')
         other_payload = {
@@ -177,6 +179,8 @@ class OurGroceries():
             ATTR_ITEM_VALUE: value,
             ATTR_ITEM_CATEGORY: category,
         }
+        if auto_category:
+            other_payload.pop(ATTR_ITEM_CATEGORY, None)
         return await self._post(ACTION_ITEM_ADD, other_payload)
 
     async def remove_item_from_list(self, list_id, item_id):

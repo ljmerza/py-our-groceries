@@ -70,9 +70,10 @@ Toggle a list item's crossed off property based on `cross_off`
 
 ---
 
-```def add_item_to_list(list_id, value, category="uncategorized")```
+```def add_item_to_list(list_id, value, category="uncategorized", auto_category=False)```
 
-Adds a new item to a given list/category
+Adds a new item to a given list/category. Use `auto_category` instead of `category` to let
+Our Groceries apply the default category for this item.
 
 ---
 
@@ -95,6 +96,9 @@ prerequisites
 python3 -m pip install --user --upgrade setuptools wheel
 python3 -m pip install --user --upgrade twine
 
+increment version in `setup.py`
+delete build folder
+
 python3 setup.py sdist bdist_wheel
-python3 -m twine upload  dist/*
+twine upload --repository ourgroceries dist/*
 ```
