@@ -83,6 +83,41 @@ Removes an item from a given list
 
 ---
 
+```def get_master_list()```
+
+Gets the master list
+
+---
+
+```def get_category_list()```
+
+Gets the category list
+
+---
+
+```def delete_list(list_id)```
+
+Deletes a list
+
+---
+
+```def delete_all_crossed_off_from_list(list_id)```
+
+Deletes all crossed off items from a list
+
+---
+
+```def add_item_to_master_list(value, category_id)```
+
+Adds an item to the master list
+
+---
+
+```def change_item_on_list(list_id, item_id, category_id, value)```
+
+Changes an item on a list
+
+---
 
 ## Exceptions
 

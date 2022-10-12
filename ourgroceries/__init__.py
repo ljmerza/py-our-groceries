@@ -78,8 +78,6 @@ def add_crossed_off_prop(item):
 class OurGroceries():
     def __init__(self, username, password):
         """Set Our Groceries username and password."""
-        self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
-
         self._username = username
         self._password = password
         self._session_key = None
@@ -89,6 +87,7 @@ class OurGroceries():
         """Logs into Our Groceries."""
         await self._get_session_cookie()
         await self._get_team_id()
+        await self._get_master_list_id()
         _LOGGER.debug('ourgroceries logged in')
 
     async def _get_session_cookie(self):
@@ -122,6 +121,16 @@ class OurGroceries():
                 categoryList = [list for list in static_metalist if list['listType'] == 'CATEGORY'][0]
                 self._category_id = categoryList['id']
                 _LOGGER.debug('ourgroceries found category_id {}'.format(self._category_id))
+
+    async def _get_master_list_id(self):
+        """Gets the master list id for a user."""
+        _LOGGER.debug('ourgroceries _get_master_list_id')
+        cookies = {COOKIE_KEY_SESSION: self._session_key}
+        async with aiohttp.ClientSession(cookies=cookies) as session:
+            async with session.get(YOUR_LISTS) as resp:
+                responseText = await resp.text()
+                self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
+                _LOGGER.debug('ourgroceries found master_list_id {}'.format(self._master_list_id))
 
     async def get_my_lists(self):
         """Get our grocery lists."""
