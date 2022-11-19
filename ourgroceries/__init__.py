@@ -30,6 +30,7 @@ ACTION_GET_LISTS = 'getOverview'
 
 ACTION_ITEM_CROSSED_OFF = 'setItemCrossedOff'
 ACTION_ITEM_ADD = 'insertItem'
+ACTION_ITEM_ADD_ITEMS = 'insertItems'
 ACTION_ITEM_REMOVE = 'deleteItem'
 ACTION_ITEM_RENAME = 'changeItemValue'
 
@@ -62,6 +63,7 @@ ATTR_ITEM_CROSSED = 'crossedOff'
 ATTR_ITEM_VALUE = 'value'
 ATTR_ITEM_CATEGORY = 'categoryId'
 ATTR_ITEM_NOTE = 'note'
+ATTR_ITEMS = 'items'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
 
@@ -75,6 +77,22 @@ def add_crossed_off_prop(item):
     item[ATTR_ITEM_CROSSED] = item.get(ATTR_ITEM_CROSSED, False)
     return item
 
+
+def list_item_to_payload(item, list_id):
+    """Maps a list item (scalar value or a tuple (value, category, note)) to payload"""
+    if isinstance(item, str):
+        payload = {
+            ATTR_ITEM_VALUE: item
+        }
+    else:
+        item = item + (None, None)
+        payload = {
+            ATTR_ITEM_VALUE: item[0],
+            ATTR_ITEM_CATEGORY: item[1],
+            ATTR_ITEM_NOTE: item[2]
+        }
+    payload[ATTR_LIST_ID] = list_id
+    return payload
 
 class OurGroceries():
     def __init__(self, username, password):
@@ -193,6 +211,18 @@ class OurGroceries():
         if auto_category:
             other_payload.pop(ATTR_ITEM_CATEGORY, None)
         return await self._post(ACTION_ITEM_ADD, other_payload)
+
+    async def add_items_to_list(self, list_id, items):
+        """
+        Add many items to a list.
+
+        :param items sequence of items, each being just a value, or a tuple (value, category, note).
+        """
+        _LOGGER.debug('ourgroceries add_items_to_list')
+        other_payload = {
+            ATTR_ITEMS: [list_item_to_payload(i, list_id) for i in items]
+        }
+        return await self._post(ACTION_ITEM_ADD_ITEMS, other_payload)
 
     async def remove_item_from_list(self, list_id, item_id):
         """Remove an item from a list."""

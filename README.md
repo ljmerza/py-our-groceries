@@ -77,6 +77,13 @@ Our Groceries apply the default category for this item.
 
 ---
 
+```async def add_items_to_list(self, list_id, items)```
+
+Adds several items to a given list. Use `items` to pass a sequence of items, each being just a value, or a tuple
+(value, category, note).
+
+---
+
 ```def remove_item_from_list(list_id, item_id)```
 
 Removes an item from a given list
