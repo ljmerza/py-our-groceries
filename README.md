@@ -135,5 +135,5 @@ increment version in `setup.py`
 delete build folder
 
 python3 setup.py sdist bdist_wheel
-twine upload --repository ourgroceries dist/*
+python3 -m twine upload dist/*
 ```
