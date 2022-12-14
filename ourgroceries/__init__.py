@@ -61,6 +61,7 @@ ATTR_ITEM_ID = 'itemId'
 ATTR_ITEM_CROSSED = 'crossedOff'
 ATTR_ITEM_VALUE = 'value'
 ATTR_ITEM_CATEGORY = 'categoryId'
+ATTR_ITEM_NOTE = 'note'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
 
@@ -180,13 +181,14 @@ class OurGroceries():
         }
         return await self._post(ACTION_ITEM_CROSSED_OFF, other_payload)
 
-    async def add_item_to_list(self, list_id, value, category="uncategorized", auto_category=False):
+    async def add_item_to_list(self, list_id, value, category="uncategorized", auto_category=False, note=None):
         """Add a new item to a list."""
         _LOGGER.debug('ourgroceries add_item_to_list')
         other_payload = {
             ATTR_LIST_ID: list_id,
             ATTR_ITEM_VALUE: value,
             ATTR_ITEM_CATEGORY: category,
+            ATTR_ITEM_NOTE: note
         }
         if auto_category:
             other_payload.pop(ATTR_ITEM_CATEGORY, None)
