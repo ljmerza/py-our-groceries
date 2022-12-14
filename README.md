@@ -70,10 +70,17 @@ Toggle a list item's crossed off property based on `cross_off`
 
 ---
 
-```def add_item_to_list(list_id, value, category="uncategorized", auto_category=False)```
+```def add_item_to_list(list_id, value, category="uncategorized", auto_category=False, note=None)```
 
 Adds a new item to a given list/category. Use `auto_category` instead of `category` to let
 Our Groceries apply the default category for this item.
+
+---
+
+```async def add_items_to_list(self, list_id, items)```
+
+Adds several items to a given list. Use `items` to pass a sequence of items, each being just a value, or a tuple
+(value, category, note).
 
 ---
 
