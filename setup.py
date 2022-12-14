@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.8.3',
-    'beautifulsoup4==4.11.1'
+    'aiohttp>=3.6.1',
+    'beautifulsoup4>=4.7.1'
 ]
 
 setup(
