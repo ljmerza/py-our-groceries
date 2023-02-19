@@ -44,7 +44,7 @@ ACTION_ITEM_RENAME = 'changeItemValue'
 
 ACTION_ITEM_CHANGE_VALUE = 'changeItemValue'
 ACTION_LIST_DELETE_ALL_CROSSED_OFF = 'deleteAllCrossedOffItems'
-REGEX_MASTER_LIST_ID = r'href="/your-lists/list/(.*)">Manage master list'
+REGEX_MASTER_LIST_ID = r'href="/your-lists/list/(\S*)".*Manage Master List'
 ATTR_CATEGORY_ID = 'categoryId'
 ATTR_ITEM_NEW_VALUE = 'newValue'
 
