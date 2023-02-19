@@ -9,7 +9,7 @@ REQUIRES = [
 
 setup(
     name='ourgroceries',
-    version='1.5.1',
+    version='1.5.3',
     author="Leonardo Merza",
     author_email="ljmerza@gmail.com",
     keywords='unoffical our groceries api',
