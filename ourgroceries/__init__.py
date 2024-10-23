@@ -4,6 +4,7 @@ import re
 import json
 import aiohttp
 import logging
+from typing import Optional
 
 from .exceptions import InvalidLoginException
 
@@ -37,6 +38,7 @@ ACTION_ITEM_RENAME = 'changeItemValue'
 ACTION_LIST_CREATE = 'createList'
 ACTION_LIST_REMOVE = 'deleteList'
 ACTION_LIST_RENAME = 'renameList'
+ACTION_LIST_SET_NOTES = 'setListNotes'
 
 ACTION_GET_MASTER_LIST = 'getMasterList'
 ACTION_GET_CATEGORY_LIST = 'getCategoryList'
@@ -66,6 +68,7 @@ ATTR_ITEM_NOTE = 'note'
 ATTR_ITEMS = 'items'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
+ATTR_LIST_NOTES = 'listNotes'
 
 # properties of returned data
 PROP_LIST = 'list'
@@ -170,6 +173,12 @@ class OurGroceries():
         data = await self._post(ACTION_GET_LIST, other_payload)
         data[PROP_LIST][PROP_ITEMS] = list(map(add_crossed_off_prop, data[PROP_LIST][PROP_ITEMS]))
         return data
+
+    async def create_recipe(self, name) -> Optional[str]:
+        """Create a new recipe and returns the new list ID on success or None if a list with that name already exists."""
+        _LOGGER.debug('ourgroceries create_recipe')
+        result = await self.create_list(name, "RECIPE")
+        return result.get(ATTR_LIST_ID) if result else None
 
     async def create_list(self, name, list_type='SHOPPING'):
         """Create a new shopping list."""
@@ -284,8 +293,17 @@ class OurGroceries():
         }
         return await self._post(ACTION_ITEM_CHANGE_VALUE, other_payload)
 
+    async def set_list_notes(self, list_id: str, notes: str):
+        """Set the notes for a list."""
+        _LOGGER.debug('ourgroceries set_list_notes')
+        other_payload = {
+            ATTR_LIST_ID: list_id,
+            ATTR_LIST_NOTES: notes,
+        }
+        return await self._post(ACTION_LIST_SET_NOTES, other_payload)
+
     async def _post(self, command, other_payload=None):
-        """Post a command to the API."""
+        """Post a command to the API. Raises an exception if the request failed."""
         if not self._session_key:
             await self.login()
 
@@ -299,5 +317,5 @@ class OurGroceries():
             payload = {**payload, **other_payload}
 
         async with aiohttp.ClientSession(cookies=cookies) as session:
-            async with session.post(YOUR_LISTS, json=payload) as resp:
+            async with session.post(YOUR_LISTS, json=payload, raise_for_status=True) as resp:
                 return await resp.json()
