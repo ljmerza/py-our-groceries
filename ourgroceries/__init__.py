@@ -26,7 +26,7 @@ FORM_VALUE_ACTION = 'sign-in'
 
 # actions to preform on post api
 ACTION_GET_LIST = 'getList'
-ACTION_GET_LISTS = 'getOverview'
+ACTION_GET_LISTS = 'getLists'
 
 ACTION_ITEM_CROSSED_OFF = 'setItemCrossedOff'
 ACTION_ITEM_ADD = 'insertItem'
@@ -40,14 +40,13 @@ ACTION_LIST_RENAME = 'renameList'
 
 ACTION_GET_MASTER_LIST = 'getMasterList'
 ACTION_GET_CATEGORY_LIST = 'getCategoryList'
-ACTION_ITEM_RENAME = 'changeItemValue'
+ACTION_GET_ITEM_CATEGORY = 'getItemCategory'
 
 ACTION_ITEM_CHANGE_VALUE = 'changeItemValue'
 ACTION_LIST_DELETE_ALL_CROSSED_OFF = 'deleteAllCrossedOffItems'
 REGEX_MASTER_LIST_ID = r'g_masterListUrl = "/your-lists/list/(\S*)"'
-ATTR_CATEGORY_ID = 'categoryId'
+ATTR_CATEGORY_ID = 'categoryId'  # same key as ATTR_ITEM_CATEGORY; kept for master-list helpers
 ATTR_ITEM_NEW_VALUE = 'newValue'
-
 
 # regex to get team id
 REGEX_TEAM_ID = r'g_teamId = "(.*)";'
@@ -63,9 +62,15 @@ ATTR_ITEM_CROSSED = 'crossedOff'
 ATTR_ITEM_VALUE = 'value'
 ATTR_ITEM_CATEGORY = 'categoryId'
 ATTR_ITEM_NOTE = 'note'
+ATTR_ITEM_NAME = 'itemName'
 ATTR_ITEMS = 'items'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
+ATTR_SHARE_ID = 'shareId'
+ATTR_LOCALE = 'locale'
+ATTR_GUESS = 'guess'
+ATTR_IS_FROM_RECIPE = 'isFromRecipe'
+ATTR_KNOWN_LISTS = 'knownLists'
 
 # properties of returned data
 PROP_LIST = 'list'
@@ -94,13 +99,15 @@ def list_item_to_payload(item, list_id):
     payload[ATTR_LIST_ID] = list_id
     return payload
 
+
 class OurGroceries():
-    def __init__(self, username, password):
+    def __init__(self, username, password, locale='en-US'):
         """Set Our Groceries username and password."""
         self._username = username
         self._password = password
         self._session_key = None
         self._team_id = None
+        self._locale = locale
 
     async def login(self):
         """Logs into Our Groceries."""
@@ -108,6 +115,7 @@ class OurGroceries():
         await self._get_team_id()
         await self._get_master_list_id()
         _LOGGER.debug('ourgroceries logged in')
+        return True
 
     async def _get_session_cookie(self):
         """Gets the session cookie value."""
@@ -151,17 +159,53 @@ class OurGroceries():
                 self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
                 _LOGGER.debug('ourgroceries found master_list_id {}'.format(self._master_list_id))
 
-    async def get_my_lists(self):
-        """Get our grocery lists."""
+    async def get_my_lists(self, known_lists=None):
+        """
+        Get our grocery lists.
+
+        The current API expects ``knownLists`` (like the web client): an array of
+        ``{listId, versionId}`` for lists the client already knows. Pass ``[]`` or
+        omit for a full refresh (same as first page load).
+        """
         _LOGGER.debug('ourgroceries get_my_lists')
-        return await self._post(ACTION_GET_LISTS)
+        if known_lists is None:
+            kl = []
+        else:
+            kl = []
+            for i in known_lists:
+                lid = i.get('id') or i.get('listId')
+                if not lid:
+                    continue
+                has_items = i.get('itemsSet', False)
+                ver = (i.get('versionId') or '') if has_items else ''
+                kl.append({'listId': lid, 'versionId': ver})
+        return await self._post(ACTION_GET_LISTS, {ATTR_KNOWN_LISTS: kl})
+
+    async def get_item_category(self, item_name, note='', guess=True):
+        """
+        Ask the server which category fits this item (same as the web UI when auto-categorize is on).
+
+        :param item_name: Item text (same as insertItem ``value``).
+        :param note: Note string; use '' to match the web client.
+        :param guess: Must be True for automatic guessing.
+        :return: Parsed JSON; expect ``categoryId`` when a category was resolved.
+        """
+        _LOGGER.debug('ourgroceries get_item_category')
+        other_payload = {
+            ATTR_ITEM_NAME: item_name,
+            ATTR_ITEM_NOTE: '' if note is None else note,
+            ATTR_GUESS: bool(guess),
+            ATTR_SHARE_ID: None,
+            ATTR_LOCALE: self._locale,
+        }
+        return await self._post(ACTION_GET_ITEM_CATEGORY, other_payload)
 
     async def get_category_items(self):
         """Get category items."""
         _LOGGER.debug('ourgroceries get_category_items')
         other_payload = {ATTR_LIST_ID: self._category_id}
         data = await self._post(ACTION_GET_LIST, other_payload)
-        return(data)
+        return data
 
     async def get_list_items(self, list_id):
         """Get an our grocery list's items."""
@@ -200,16 +244,44 @@ class OurGroceries():
         return await self._post(ACTION_ITEM_CROSSED_OFF, other_payload)
 
     async def add_item_to_list(self, list_id, value, category="uncategorized", auto_category=False, note=None):
-        """Add a new item to a list."""
+        """Add a new item to a list.
+
+        When ``auto_category`` is True, calls ``getItemCategory`` with ``guess=True`` (same as the
+        current web app), then ``insertItem`` with the returned ``categoryId``. If no category is
+        returned, falls back to omitting ``categoryId`` on insert (legacy behavior).
+        """
         _LOGGER.debug('ourgroceries add_item_to_list')
+        note_str = '' if note is None else note
+
+        if auto_category:
+            guessed = await self.get_item_category(value, note_str, True)
+            category_resolved = None
+            if isinstance(guessed, dict):
+                category_resolved = guessed.get(ATTR_ITEM_CATEGORY)
+
+            other_payload = {
+                ATTR_LIST_ID: list_id,
+                ATTR_ITEM_VALUE: value,
+                ATTR_ITEM_NOTE: note_str,
+                ATTR_IS_FROM_RECIPE: False,
+                ATTR_SHARE_ID: None,
+                ATTR_LOCALE: self._locale,
+            }
+            if category_resolved:
+                other_payload[ATTR_ITEM_CATEGORY] = category_resolved
+            else:
+                _LOGGER.warning(
+                    'ourgroceries getItemCategory returned no categoryId; insertItem omits categoryId',
+                )
+
+            return await self._post(ACTION_ITEM_ADD, other_payload)
+
         other_payload = {
             ATTR_LIST_ID: list_id,
             ATTR_ITEM_VALUE: value,
             ATTR_ITEM_CATEGORY: category,
-            ATTR_ITEM_NOTE: note
+            ATTR_ITEM_NOTE: note,
         }
-        if auto_category:
-            other_payload.pop(ATTR_ITEM_CATEGORY, None)
         return await self._post(ACTION_ITEM_ADD, other_payload)
 
     async def add_items_to_list(self, list_id, items):
@@ -299,5 +371,7 @@ class OurGroceries():
             payload = {**payload, **other_payload}
 
         async with aiohttp.ClientSession(cookies=cookies) as session:
-            async with session.post(YOUR_LISTS, json=payload) as resp:
-                return await resp.json()
+            async with session.post(YOUR_LISTS, data=payload) as resp:
+                resp.raise_for_status()
+                # Site responses may omit or vary Content-Type; still JSON body.
+                return await resp.json(content_type=None)
