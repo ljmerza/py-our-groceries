@@ -44,6 +44,8 @@ ACTION_ITEM_RENAME = 'changeItemValue'
 
 ACTION_ITEM_CHANGE_VALUE = 'changeItemValue'
 ACTION_LIST_DELETE_ALL_CROSSED_OFF = 'deleteAllCrossedOffItems'
+ACTION_EDIT = 'edit'
+EDIT_TYPE_DELETE = 'delete'
 REGEX_MASTER_LIST_ID = r'g_masterListUrl = "/your-lists/list/(\S*)"'
 ATTR_CATEGORY_ID = 'categoryId'
 ATTR_ITEM_NEW_VALUE = 'newValue'
@@ -66,10 +68,20 @@ ATTR_ITEM_NOTE = 'note'
 ATTR_ITEMS = 'items'
 ATTR_COMMAND = 'command'
 ATTR_TEAM_ID = 'teamId'
+ATTR_EDIT_RECORDS = 'edits'
+ATTR_EDIT_TYPE = 'editType'
 
 # properties of returned data
 PROP_LIST = 'list'
 PROP_ITEMS = 'items'
+
+
+def make_delete_item_edit_record(item_id):
+    """Makes an edit record (for edit_items()) to delete an item."""
+    return {
+        ATTR_EDIT_TYPE: EDIT_TYPE_DELETE,
+        ATTR_ITEM_ID: item_id,
+    }
 
 
 def add_crossed_off_prop(item):
@@ -264,7 +276,7 @@ class OurGroceries():
 
     async def add_item_to_master_list(self, value, category_id):
         """Add a new item to a list."""
-        _LOGGER.debug('ourgroceries add_item_to_list')
+        _LOGGER.debug('ourgroceries add_item_to_master_list')
         other_payload = {
             ATTR_LIST_ID: self._master_list_id,
             ATTR_ITEM_VALUE: value,
@@ -274,7 +286,7 @@ class OurGroceries():
 
     async def change_item_on_list(self, list_id, item_id, category_id, value):
         """Add a new item to a list."""
-        _LOGGER.debug('ourgroceries add_item_to_list')
+        _LOGGER.debug('ourgroceries change_item_on_list')
         other_payload = {
             ATTR_ITEM_ID: item_id,
             ATTR_LIST_ID: list_id,
@@ -283,6 +295,16 @@ class OurGroceries():
             ATTR_TEAM_ID: self._team_id,
         }
         return await self._post(ACTION_ITEM_CHANGE_VALUE, other_payload)
+
+    async def edit_items(self, list_id, edit_records):
+        """Make a sequence of changes to items on a single list."""
+        _LOGGER.debug('ourgroceries edit_items')
+        other_payload = {
+            ATTR_TEAM_ID: self._team_id,
+            ATTR_LIST_ID: list_id,
+            ATTR_EDIT_RECORDS: edit_records,
+        }
+        return await self._post(ACTION_EDIT, other_payload)
 
     async def _post(self, command, other_payload=None):
         """Post a command to the API."""

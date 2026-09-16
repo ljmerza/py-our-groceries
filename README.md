@@ -126,6 +126,13 @@ Changes an item on a list
 
 ---
 
+```def edit_items(list_id, edit_records)```
+
+Makes a sequence of edits to items on a single list.
+See `make_delete_item_edit_record()`.
+
+---
+
 ## Exceptions
 
 throws `InvalidLoginException` if can't login.
@@ -144,3 +151,8 @@ delete build folder
 python3 setup.py sdist bdist_wheel
 python3 -m twine upload dist/*
 ```
+
+## Legal
+
+OurGroceries is a registered trademark of OurGroceries, Inc.
+This project is not affiliated with, endorsed by, or supported by OurGroceries, Inc.
