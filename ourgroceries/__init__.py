@@ -18,6 +18,9 @@ YOUR_LISTS = '{}/your-lists/'.format(BASE_URL)
 # cookies
 COOKIE_KEY_SESSION = 'ourgroceries-auth'
 
+# seconds to wait for a request before giving up (aiohttp's own default is 5 minutes)
+DEFAULT_TIMEOUT = 30
+
 # form fields when logging in
 FORM_KEY_USERNAME = 'emailAddress'
 FORM_KEY_PASSWORD = 'password'
@@ -107,18 +110,25 @@ def list_item_to_payload(item, list_id):
     return payload
 
 class OurGroceries():
-    def __init__(self, username, password):
-        """Set Our Groceries username and password."""
+    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT):
+        """Set Our Groceries username, password and request timeout in seconds."""
         self._username = username
         self._password = password
+        self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._session_key = None
         self._team_id = None
 
     async def login(self):
         """Logs into Our Groceries."""
-        await self._get_session_cookie()
-        await self._get_team_id()
-        await self._get_master_list_id()
+        self._session_key = None
+        try:
+            await self._get_session_cookie()
+            await self._get_team_id()
+            await self._get_master_list_id()
+        except Exception:
+            # a half-finished login must not leave a session behind for _post to reuse
+            self._session_key = None
+            raise
         _LOGGER.debug('ourgroceries logged in')
 
     async def _get_session_cookie(self):
@@ -128,7 +138,7 @@ class OurGroceries():
         form_data.add_field(FORM_KEY_USERNAME, self._username)
         form_data.add_field(FORM_KEY_PASSWORD, self._password)
         form_data.add_field(FORM_KEY_ACTION, FORM_VALUE_ACTION)
-        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar()) as session:
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(), timeout=self._timeout) as session:
             async with session.post(SIGN_IN, data=form_data):
                 cookies = session.cookie_jar.filter_cookies(BASE_URL)
                 for key, cookie in cookies.items():
@@ -143,7 +153,7 @@ class OurGroceries():
         """Gets the team id for a user."""
         _LOGGER.debug('ourgroceries _get_team_id')
         cookies = {COOKIE_KEY_SESSION: self._session_key}
-        async with aiohttp.ClientSession(cookies=cookies) as session:
+        async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
@@ -157,7 +167,7 @@ class OurGroceries():
         """Gets the master list id for a user."""
         _LOGGER.debug('ourgroceries _get_master_list_id')
         cookies = {COOKIE_KEY_SESSION: self._session_key}
-        async with aiohttp.ClientSession(cookies=cookies) as session:
+        async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
@@ -307,19 +317,25 @@ class OurGroceries():
         return await self._post(ACTION_EDIT, other_payload)
 
     async def _post(self, command, other_payload=None):
-        """Post a command to the API."""
-        if not self._session_key:
-            await self.login()
+        """Post a command to the API, logging in again once if the session has expired."""
+        for attempt in range(2):
+            if not self._session_key:
+                await self.login()
 
-        cookies = {COOKIE_KEY_SESSION: self._session_key}
-        payload = {ATTR_COMMAND: command}
+            cookies = {COOKIE_KEY_SESSION: self._session_key}
+            payload = {ATTR_COMMAND: command}
 
-        if self._team_id:
-            payload[ATTR_TEAM_ID] = self._team_id
+            if self._team_id:
+                payload[ATTR_TEAM_ID] = self._team_id
 
-        if other_payload:
-            payload = {**payload, **other_payload}
+            if other_payload:
+                payload = {**payload, **other_payload}
 
-        async with aiohttp.ClientSession(cookies=cookies) as session:
-            async with session.post(YOUR_LISTS, json=payload) as resp:
-                return await resp.json()
+            async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
+                async with session.post(YOUR_LISTS, json=payload) as resp:
+                    # an expired session gets a 401 with an empty body
+                    if resp.status == 401 and attempt == 0:
+                        _LOGGER.debug('ourgroceries session rejected, logging in again')
+                        self._session_key = None
+                        continue
+                    return await resp.json()
