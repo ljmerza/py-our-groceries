@@ -2,6 +2,7 @@
 
 import re
 import json
+import asyncio
 import aiohttp
 import logging
 
@@ -17,6 +18,9 @@ YOUR_LISTS = '{}/your-lists/'.format(BASE_URL)
 
 # cookies
 COOKIE_KEY_SESSION = 'ourgroceries-auth'
+
+# seconds to wait for a request before giving up (aiohttp's own default is 5 minutes)
+DEFAULT_TIMEOUT = 30
 
 # form fields when logging in
 FORM_KEY_USERNAME = 'emailAddress'
@@ -107,19 +111,48 @@ def list_item_to_payload(item, list_id):
     return payload
 
 class OurGroceries():
-    def __init__(self, username, password):
-        """Set Our Groceries username and password."""
+    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT):
+        """Set Our Groceries username, password and request timeout in seconds."""
         self._username = username
         self._password = password
+        self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._session_key = None
         self._team_id = None
+        self._login_lock = None
+        self._login_lock_loop = None
+
+    def _get_login_lock(self):
+        """Gets the lock that lets one login run at a time."""
+        # an asyncio lock belongs to one event loop and the same client can be used from several
+        loop = asyncio.get_event_loop()
+        if self._login_lock_loop is not loop:
+            self._login_lock = asyncio.Lock()
+            self._login_lock_loop = loop
+        return self._login_lock
 
     async def login(self):
         """Logs into Our Groceries."""
-        await self._get_session_cookie()
-        await self._get_team_id()
-        await self._get_master_list_id()
+        async with self._get_login_lock():
+            await self._login()
+
+    async def _login(self):
+        """Runs the login steps. The caller must hold the login lock."""
+        self._session_key = None
+        try:
+            await self._get_session_cookie()
+            await self._get_team_id()
+            await self._get_master_list_id()
+        except BaseException:
+            # a half-finished login, a cancelled one included, must not leave a session behind for _post to reuse
+            self._session_key = None
+            raise
         _LOGGER.debug('ourgroceries logged in')
+
+    async def _ensure_session(self, rejected_key=None):
+        """Logs in unless there is already a session other than the one the server rejected."""
+        async with self._get_login_lock():
+            if not self._session_key or self._session_key == rejected_key:
+                await self._login()
 
     async def _get_session_cookie(self):
         """Gets the session cookie value."""
@@ -128,7 +161,7 @@ class OurGroceries():
         form_data.add_field(FORM_KEY_USERNAME, self._username)
         form_data.add_field(FORM_KEY_PASSWORD, self._password)
         form_data.add_field(FORM_KEY_ACTION, FORM_VALUE_ACTION)
-        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar()) as session:
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(), timeout=self._timeout) as session:
             async with session.post(SIGN_IN, data=form_data):
                 cookies = session.cookie_jar.filter_cookies(BASE_URL)
                 for key, cookie in cookies.items():
@@ -143,7 +176,7 @@ class OurGroceries():
         """Gets the team id for a user."""
         _LOGGER.debug('ourgroceries _get_team_id')
         cookies = {COOKIE_KEY_SESSION: self._session_key}
-        async with aiohttp.ClientSession(cookies=cookies) as session:
+        async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._team_id = re.findall(REGEX_TEAM_ID, responseText)[0]
@@ -157,7 +190,7 @@ class OurGroceries():
         """Gets the master list id for a user."""
         _LOGGER.debug('ourgroceries _get_master_list_id')
         cookies = {COOKIE_KEY_SESSION: self._session_key}
-        async with aiohttp.ClientSession(cookies=cookies) as session:
+        async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
             async with session.get(YOUR_LISTS) as resp:
                 responseText = await resp.text()
                 self._master_list_id = re.findall(REGEX_MASTER_LIST_ID, responseText)[0]
@@ -307,19 +340,30 @@ class OurGroceries():
         return await self._post(ACTION_EDIT, other_payload)
 
     async def _post(self, command, other_payload=None):
-        """Post a command to the API."""
-        if not self._session_key:
-            await self.login()
+        """Post a command to the API, logging in again once if the session has expired."""
+        rejected_key = None
+        for attempt in range(2):
+            # also waits for a login another task has in flight, so a session is only used once it is complete
+            await self._ensure_session(rejected_key)
 
-        cookies = {COOKIE_KEY_SESSION: self._session_key}
-        payload = {ATTR_COMMAND: command}
+            session_key = self._session_key
+            cookies = {COOKIE_KEY_SESSION: session_key}
+            payload = {ATTR_COMMAND: command}
 
-        if self._team_id:
-            payload[ATTR_TEAM_ID] = self._team_id
+            if self._team_id:
+                payload[ATTR_TEAM_ID] = self._team_id
 
-        if other_payload:
-            payload = {**payload, **other_payload}
+            if other_payload:
+                payload = {**payload, **other_payload}
 
-        async with aiohttp.ClientSession(cookies=cookies) as session:
-            async with session.post(YOUR_LISTS, json=payload) as resp:
-                return await resp.json()
+            async with aiohttp.ClientSession(cookies=cookies, timeout=self._timeout) as session:
+                async with session.post(YOUR_LISTS, json=payload) as resp:
+                    # an expired session gets a 401 with an empty body
+                    if resp.status == 401:
+                        if attempt == 0:
+                            _LOGGER.debug('ourgroceries session rejected, logging in again')
+                            # another task may already have logged in again, so only this key is given up
+                            rejected_key = session_key
+                            continue
+                        resp.raise_for_status()
+                    return await resp.json()
