@@ -27,7 +27,7 @@ my_todo_list = loop.run_until_complete(og.get_list_items(list_id=''))
 print(my_todo_list)
 ```
 
-Each request gives up after 30 seconds by default; pass `timeout=` (in seconds) to change it, e.g. `OurGroceries(username, password, timeout=60)`. If the session has expired, the next call logs in again by itself.
+Each HTTP request gives up after 30 seconds by default; pass `timeout=` (in seconds) to change it, e.g. `OurGroceries(username, password, timeout=60)`. If the session has expired, the next call logs in again by itself, so a single call can make up to five requests.
 
 ## Methods
 ```def login()```
